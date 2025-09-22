@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Alagamentos - Protótipo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #2c5aa0;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+
+        .header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .nav {
+            background-color: #f8f9fa;
+            display: flex;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border-right: 1px solid #ddd;
+            background: none;
+            border-top: none;
+            border-bottom: none;
+            border-left: none;
+        }
+
+        .nav-item:last-child {
+            border-right: none;
+        }
+
+        .nav-item:hover {
+            background-color: #e9ecef;
+        }
+
+        .nav-item.active {
+            background-color: #2c5aa0;
+            color: white;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Mapa */
+        .map-container {
+            border: 2px solid #ccc;
+            height: 400px;
+            margin-bottom: 20px;
+            background-color: #e6f3ff;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            height: 100%;
+            gap: 1px;
+        }
+
+        .map-area {
+            background-color: #90EE90;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid #666;
+        }
+
+        .map-area.alagado-leve {
+            background-color: #FFD700;
+        }
+
+        .map-area.alagado-medio {
+            background-color: #FFA500;
+        }
+
+        .map-area.alagado-severo {
+            background-color: #FF4500;
+            color: white;
+        }
+
+        .map-area.bloqueado {
+            background-color: #DC143C;
+            color: white;
+        }
+
+        .legenda {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .legenda-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .cor {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #333;
+        }
+
+        /* Formulários */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            background-color: #2c5aa0;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background-color: #1e3f72;
+        }
+
+        /* Rota */
+        .rota-resultado {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .rota-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .rota-passos {
+            list-style: none;
+            padding: 0;
+        }
+
+        .rota-passos li {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-left: 3px solid #2c5aa0;
+            padding-left: 15px;
+        }
+
+        .alerta {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        /* Histórico */
+        .historico-item {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .historico-item.medio {
+            border-left-color: #ffc107;
+        }
+
+        .historico-item.alto {
+            border-left-color: #dc3545;
+        }
+
+        .data {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        /* Estatísticas */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-numero {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c5aa0;
+        }
+
+        /* Defesa Civil */
+        .emergencia {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .botoes {
+            margin-top: 10px;
+        }
+
+        .btn-pequeno {
+            padding: 6px 12px;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+
+        .btn-vermelho {
+            background-color: #dc3545;
+        }
+
+        .btn-amarelo {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+            }
+            
+            .legenda {
+                flex-direction: column;
+                gap: 10px;
+                align-items: center;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .rota-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Mapa de Alagamentos na Cidade</h1>
+            <p>Sistema colaborativo para monitoramento de enchentes</p>
+        </div>
+
+        <div class="nav">
+            <button class="nav-item active" onclick="mostrarTela('mapa')">Mapa</button>
+            <button class="nav-item" onclick="mostrarTela('registro')">Registrar</button>
+            <button class="nav-item" onclick="mostrarTela('rotas')">Rotas</button>
+            <button class="nav-item" onclick="mostrarTela('historico')">Histórico</button>
+            <button class="nav-item" onclick="mostrarTela('defesa-civil')">Defesa Civil</button>
+        </div>
+
+        <div class="content">
+            <!-- Tela Mapa -->
+            <div id="mapa" class="screen active">
+                <h2>Mapa em Tempo Real</h2>
+                
+                <div class="map-container">
+                    <div class="map-grid">
+                        <div class="map-area">Centro</div>
+                        <div class="map-area">Jardins</div>
+                        <div class="map-area">Vila Nova</div>
+                        <div class="map-area alagado-medio">Industrial</div>
+                        <div class="map-area">Residencial</div>
+                        <div class="map-area">Comercial</div>
+                        
+                        <div class="map-area">Zona Norte</div>
+                        <div class="map-area alagado-severo">Zona Sul</div>
+                        <div class="map-area">Vila Rica</div>
+                        <div class="map-area">Boa Vista</div>
+                        <div class="map-area alagado-leve">Liberdade</div>
+                        <div class="map-area">Saúde</div>
+                        
+                        <div class="map-area">Lapa</div>
+                        <div class="map-area">Pinheiros</div>
+                        <div class="map-area">Vila Madalena</div>
+                        <div class="map-area alagado-medio">Santana</div>
+                        <div class="map-area">Tatuapé</div>
+                        <div class="map-area">Penha</div>
+                        
+                        <div class="map-area">Ipiranga</div>
+                        <div class="map-area">Morumbi</div>
+                        <div class="map-area bloqueado">Bela Vista</div>
+                        <div class="map-area">Tucuruvi</div>
+                        <div class="map-area">Campo Limpo</div>
+                        <div class="map-area">Jaçanã</div>
+                    </div>
+                </div>
+
+                <div class="legenda">
+                    <div class="legenda-item">
+                        <div class="cor" style="background-color: #90EE90;"></div>
+                        <span>Normal</span>
+                    </div>
+                    <div class="legenda-item">
+                        <div class="cor" style="background-color: #FFD700;"></div>
+                        <span>Alagamento Leve</span>
+                    </div>
+                    <div class="legenda-item">
+                        <div class="cor" style="background-color: #FFA500;"></div>
+                        <span>Alagamento Médio</span>
+                    </div>
+                    <div class="legenda-item">
+                        <div class="cor" style="background-color: #FF4500;"></div>
+                        <span>Alagamento Severo</span>
+                    </div>
+                    <div class="legenda-item">
+                        <div class="cor" style="background-color: #DC143C;"></div>
+                        <span>Bloqueado</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Buscar localização:</label>
+                    <input type="text" placeholder="Digite o nome da rua ou bairro...">
+                </div>
+            </div>
+
+            <!-- Tela Registro -->
+            <div id="registro" class="screen">
+                <h2>Registrar Ocorrência</h2>
+                
+                <div class="form-group">
+                    <label>Localização:</label>
+                    <input type="text" placeholder="Rua, número, bairro..." required>
+                    <small>Localização GPS detectada automaticamente</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de alagamento:</label>
+                    <select required>
+                        <option value="">Selecione...</option>
+                        <option value="leve">Leve - Água até a sarjeta</option>
+                        <option value="medio">Médio - Água na metade da rua</option>
+                        <option value="severo">Severo - Água cobrindo a rua</option>
+                        <option value="bloqueado">Bloqueado - Intransitável</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Descrição (opcional):</label>
+                    <textarea rows="4" placeholder="Detalhes sobre a situação..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Foto (opcional):</label>
+                    <input type="file" accept="image/*">
+                </div>
+
+                <button class="btn" onclick="enviarOcorrencia()">Enviar Ocorrência</button>
+
+                <div class="alerta" id="sucesso" style="display: none; background-color: #d4edda; color: #155724;">
+                    Ocorrência registrada com sucesso! Obrigado por contribuir.
+                </div>
+            </div>
+
+            <!-- Tela Rotas -->
+            <div id="rotas" class="screen">
+                <h2>Consulta de Rotas Seguras</h2>
+                
+                <div class="form-group">
+                    <label>Origem:</label>
+                    <input type="text" placeholder="Endereço de partida..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>Destino:</label>
+                    <input type="text" placeholder="Endereço de chegada..." required>
+                </div>
+
+                <button class="btn" onclick="calcularRota()">Calcular Rota Segura</button>
+
+                <div class="rota-resultado" id="rotaResultado">
+                    <div class="rota-info">
+                        <span>Tempo estimado: 15 min</span>
+                        <span>Distância: 8.5 km</span>
+                    </div>
+                    
+                    <div class="alerta">
+                        ⚠ Rota alternativa sugerida evitando 2 áreas alagadas
+                    </div>
+
+                    <h4>Instruções:</h4>
+                    <ul class="rota-passos">
+                        <li>Sair da origem pela Rua das Palmeiras</li>
+                        <li>Virar à direita na Av. Principal</li>
+                        <li><strong>EVITAR</strong> Rua do Centro (alagada)</li>
+                        <li>Continuar pela Av. Alternativa</li>
+                        <li>Chegar ao destino</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Tela Histórico -->
+            <div id="historico" class="screen">
+                <h2>Histórico de Alagamentos</h2>
+                
+                <div class="form-group">
+                    <label>Filtrar por bairro:</label>
+                    <select>
+                        <option value="">Todos os bairros</option>
+                        <option value="centro">Centro</option>
+                        <option value="jardins">Jardins</option>
+                        <option value="vila-nova">Vila Nova</option>
+                        <option value="industrial">Industrial</option>
+                    </select>
+                </div>
+
+                <div class="historico-item alto">
+                    <div class="data">18/09/2025 - 14:30</div>
+                    <strong>Rua das Flores, 123 - Centro</strong>
+                    <p>Alagamento severo após chuva intensa. Rua intransitável para veículos pequenos.</p>
+                    <small>Reportado por: Rafael (Entregador) • Status: Resolvido</small>
+                </div>
+
+                <div class="historico-item medio">
+                    <div class="data">17/09/2025 - 09:15</div>
+                    <strong>Av. Principal, altura do 500 - Jardins</strong>
+                    <p>Alagamento moderado na faixa da direita. Trânsito lento.</p>
+                    <small>Reportado por: Maria (Professora) • Status: Resolvido</small>
+                </div>
+
+                <div class="historico-item">
+                    <div class="data">15/09/2025 - 16:45</div>
+                    <strong>Rua dos Pássaros - Vila Nova</strong>
+                    <p>Alagamento leve após chuva rápida. Situação normalizada em 30 minutos.</p>
+                    <small>Reportado por: Morador local • Status: Resolvido</small>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-numero">47</div>
+                        <div>Ocorrências este mês</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-numero">85%</div>
+                        <div>Taxa de resolução</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-numero">12min</div>
+                        <div>Tempo médio resposta</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tela Defesa Civil -->
+            <div id="defesa-civil" class="screen">
+                <h2>Painel da Defesa Civil</h2>
+                
+                <div class="stats" style="grid-template-columns: repeat(4, 1fr);">
+                    <div class="stat-box">
+                        <div class="stat-numero">8</div>
+                        <div>Ocorrências Ativas</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-numero">3</div>
+                        <div>Equipes em Campo</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-numero">15</div>
+                        <div>Alertas Hoje</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-numero">92%</div>
+                        <div>Eficácia</div>
+                    </div>
+                </div>
+
+                <h3>Ocorrências Prioritárias</h3>
+                
+                <div class="emergencia">
+                    <div class="data">URGENTE - Há 15 minutos</div>
+                    <strong>Rua do Comércio, 445 - Centro</strong>
+                    <p>Alagamento severo bloqueando passagem de ambulância. 3 confirmações de usuários.</p>
+                    <div class="botoes">
+                        <button class="btn btn-pequeno btn-vermelho">Enviar Equipe</button>
+                        <button class="btn btn-pequeno btn-amarelo">Atualizar Status</button>
+                    </div>
+                </div>
+
+                <div class="emergencia" style="background-color: #fff3cd; border-color: #ffeaa7;">
+                    <div class="data">Há 45 minutos</div>
+                    <strong>Av. Paulista, altura do 1200</strong>
+                    <p>Alagamento moderado afetando transporte público. 2 confirmações.</p>
+                    <div class="botoes">
+                        <button class="btn btn-pequeno btn-amarelo">Enviar Equipe</button>
+                        <button class="btn btn-pequeno btn-amarelo">Atualizar Status</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Enviar alerta geral:</label>
+                    <textarea rows="3" placeholder="Digite o alerta para a população..."></textarea>
+                    <br><br>
+                    <button class="btn">Enviar Alerta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function mostrarTela(tela) {
+            // Esconder todas as telas
+            var telas = document.querySelectorAll('.screen');
+            telas.forEach(function(t) {
+                t.classList.remove('active');
+            });
+            
+            // Remover classe active dos botões
+            var botoes = document.querySelectorAll('.nav-item');
+            botoes.forEach(function(b) {
+                b.classList.remove('active');
+            });
+            
+            // Mostrar tela selecionada
+            document.getElementById(tela).classList.add('active');
+            
+            // Ativar botão
+            event.target.classList.add('active');
+        }
+        
+        function enviarOcorrencia() {
+            document.getElementById('sucesso').style.display = 'block';
+            setTimeout(function() {
+                document.getElementById('sucesso').style.display = 'none';
+            }, 3000);
+        }
+        
+        function calcularRota() {
+            document.getElementById('rotaResultado').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
