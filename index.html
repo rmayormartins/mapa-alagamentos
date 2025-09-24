@@ -198,19 +198,6 @@
             font-weight: bold;
         }
 
-        .rota-passos {
-            list-style: none;
-            padding: 0;
-        }
-
-        .rota-passos li {
-            padding: 8px;
-            margin: 5px 0;
-            background: white;
-            border-left: 3px solid #2c5aa0;
-            padding-left: 15px;
-        }
-
         .alerta {
             background-color: #fff3cd;
             border: 1px solid #ffeaa7;
@@ -337,34 +324,8 @@
                 <h2>Mapa em Tempo Real</h2>
                 
                 <div class="map-container">
-                    <div class="map-grid">
-                        <div class="map-area">Centro</div>
-                        <div class="map-area">Jardins</div>
-                        <div class="map-area">Vila Nova</div>
-                        <div class="map-area alagado-medio">Industrial</div>
-                        <div class="map-area">Residencial</div>
-                        <div class="map-area">Comercial</div>
-                        
-                        <div class="map-area">Zona Norte</div>
-                        <div class="map-area alagado-severo">Zona Sul</div>
-                        <div class="map-area">Vila Rica</div>
-                        <div class="map-area">Boa Vista</div>
-                        <div class="map-area alagado-leve">Liberdade</div>
-                        <div class="map-area">Saúde</div>
-                        
-                        <div class="map-area">Lapa</div>
-                        <div class="map-area">Pinheiros</div>
-                        <div class="map-area">Vila Madalena</div>
-                        <div class="map-area alagado-medio">Santana</div>
-                        <div class="map-area">Tatuapé</div>
-                        <div class="map-area">Penha</div>
-                        
-                        <div class="map-area">Ipiranga</div>
-                        <div class="map-area">Morumbi</div>
-                        <div class="map-area bloqueado">Bela Vista</div>
-                        <div class="map-area">Tucuruvi</div>
-                        <div class="map-area">Campo Limpo</div>
-                        <div class="map-area">Jaçanã</div>
+                    <div class="map-grid" id="mapaGrid">
+                        <!-- Grid será gerado dinamicamente -->
                     </div>
                 </div>
 
@@ -393,7 +354,7 @@
 
                 <div class="form-group">
                     <label>Buscar localização:</label>
-                    <input type="text" placeholder="Digite o nome da rua ou bairro...">
+                    <input type="text" id="buscaLocal" placeholder="Digite o nome da rua ou bairro...">
                 </div>
             </div>
 
@@ -401,34 +362,31 @@
             <div id="registro" class="screen">
                 <h2>Registrar Ocorrência</h2>
                 
-                <div class="form-group">
-                    <label>Localização:</label>
-                    <input type="text" placeholder="Rua, número, bairro..." required>
-                    <small>Localização GPS detectada automaticamente</small>
-                </div>
+                <form id="formRegistro" onsubmit="return enviarOcorrencia(event)">
+                    <div class="form-group">
+                        <label>Localização:</label>
+                        <input type="text" id="localizacao" placeholder="Rua, número, bairro..." required>
+                        <small>Localização GPS detectada automaticamente</small>
+                    </div>
 
-                <div class="form-group">
-                    <label>Tipo de alagamento:</label>
-                    <select required>
-                        <option value="">Selecione...</option>
-                        <option value="leve">Leve - Água até a sarjeta</option>
-                        <option value="medio">Médio - Água na metade da rua</option>
-                        <option value="severo">Severo - Água cobrindo a rua</option>
-                        <option value="bloqueado">Bloqueado - Intransitável</option>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label>Tipo de alagamento:</label>
+                        <select id="tipoAlagamento" required>
+                            <option value="">Selecione...</option>
+                            <option value="leve">Leve - Água até a sarjeta</option>
+                            <option value="medio">Médio - Água na metade da rua</option>
+                            <option value="severo">Severo - Água cobrindo a rua</option>
+                            <option value="bloqueado">Bloqueado - Intransitável</option>
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label>Descrição (opcional):</label>
-                    <textarea rows="4" placeholder="Detalhes sobre a situação..."></textarea>
-                </div>
+                    <div class="form-group">
+                        <label>Descrição (opcional):</label>
+                        <textarea id="descricao" rows="4" placeholder="Detalhes sobre a situação..."></textarea>
+                    </div>
 
-                <div class="form-group">
-                    <label>Foto (opcional):</label>
-                    <input type="file" accept="image/*">
-                </div>
-
-                <button class="btn" onclick="enviarOcorrencia()">Enviar Ocorrência</button>
+                    <button type="submit" class="btn">Enviar Ocorrência</button>
+                </form>
 
                 <div class="alerta" id="sucesso" style="display: none; background-color: #d4edda; color: #155724;">
                     Ocorrência registrada com sucesso! Obrigado por contribuir.
@@ -441,12 +399,12 @@
                 
                 <div class="form-group">
                     <label>Origem:</label>
-                    <input type="text" placeholder="Endereço de partida..." required>
+                    <input type="text" id="origem" placeholder="Endereço de partida..." required>
                 </div>
 
                 <div class="form-group">
                     <label>Destino:</label>
-                    <input type="text" placeholder="Endereço de chegada..." required>
+                    <input type="text" id="destino" placeholder="Endereço de chegada..." required>
                 </div>
 
                 <button class="btn" onclick="calcularRota()">Calcular Rota Segura</button>
@@ -460,15 +418,6 @@
                     <div class="alerta">
                         ⚠ Rota alternativa sugerida evitando 2 áreas alagadas
                     </div>
-
-                    <h4>Instruções:</h4>
-                    <ul class="rota-passos">
-                        <li>Sair da origem pela Rua das Palmeiras</li>
-                        <li>Virar à direita na Av. Principal</li>
-                        <li><strong>EVITAR</strong> Rua do Centro (alagada)</li>
-                        <li>Continuar pela Av. Alternativa</li>
-                        <li>Chegar ao destino</li>
-                    </ul>
                 </div>
             </div>
 
@@ -478,7 +427,7 @@
                 
                 <div class="form-group">
                     <label>Filtrar por bairro:</label>
-                    <select>
+                    <select id="filtroBairro" onchange="filtrarHistorico()">
                         <option value="">Todos os bairros</option>
                         <option value="centro">Centro</option>
                         <option value="jardins">Jardins</option>
@@ -487,30 +436,13 @@
                     </select>
                 </div>
 
-                <div class="historico-item alto">
-                    <div class="data">18/09/2025 - 14:30</div>
-                    <strong>Rua das Flores, 123 - Centro</strong>
-                    <p>Alagamento severo após chuva intensa. Rua intransitável para veículos pequenos.</p>
-                    <small>Reportado por: Rafael (Entregador) • Status: Resolvido</small>
-                </div>
-
-                <div class="historico-item medio">
-                    <div class="data">17/09/2025 - 09:15</div>
-                    <strong>Av. Principal, altura do 500 - Jardins</strong>
-                    <p>Alagamento moderado na faixa da direita. Trânsito lento.</p>
-                    <small>Reportado por: Maria (Professora) • Status: Resolvido</small>
-                </div>
-
-                <div class="historico-item">
-                    <div class="data">15/09/2025 - 16:45</div>
-                    <strong>Rua dos Pássaros - Vila Nova</strong>
-                    <p>Alagamento leve após chuva rápida. Situação normalizada em 30 minutos.</p>
-                    <small>Reportado por: Morador local • Status: Resolvido</small>
+                <div id="listaHistorico">
+                    <!-- Histórico será carregado dinamicamente -->
                 </div>
 
                 <div class="stats">
                     <div class="stat-box">
-                        <div class="stat-numero">47</div>
+                        <div class="stat-numero" id="totalOcorrencias">0</div>
                         <div>Ocorrências este mês</div>
                     </div>
                     <div class="stat-box">
@@ -530,7 +462,7 @@
                 
                 <div class="stats" style="grid-template-columns: repeat(4, 1fr);">
                     <div class="stat-box">
-                        <div class="stat-numero">8</div>
+                        <div class="stat-numero" id="ocorrenciasAtivas">0</div>
                         <div>Ocorrências Ativas</div>
                     </div>
                     <div class="stat-box">
@@ -538,7 +470,7 @@
                         <div>Equipes em Campo</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-numero">15</div>
+                        <div class="stat-numero" id="alertasHoje">0</div>
                         <div>Alertas Hoje</div>
                     </div>
                     <div class="stat-box">
@@ -549,67 +481,230 @@
 
                 <h3>Ocorrências Prioritárias</h3>
                 
-                <div class="emergencia">
-                    <div class="data">URGENTE - Há 15 minutos</div>
-                    <strong>Rua do Comércio, 445 - Centro</strong>
-                    <p>Alagamento severo bloqueando passagem de ambulância. 3 confirmações de usuários.</p>
-                    <div class="botoes">
-                        <button class="btn btn-pequeno btn-vermelho">Enviar Equipe</button>
-                        <button class="btn btn-pequeno btn-amarelo">Atualizar Status</button>
-                    </div>
-                </div>
-
-                <div class="emergencia" style="background-color: #fff3cd; border-color: #ffeaa7;">
-                    <div class="data">Há 45 minutos</div>
-                    <strong>Av. Paulista, altura do 1200</strong>
-                    <p>Alagamento moderado afetando transporte público. 2 confirmações.</p>
-                    <div class="botoes">
-                        <button class="btn btn-pequeno btn-amarelo">Enviar Equipe</button>
-                        <button class="btn btn-pequeno btn-amarelo">Atualizar Status</button>
-                    </div>
+                <div id="ocorrenciasPrioritarias">
+                    <!-- Ocorrências serão carregadas dinamicamente -->
                 </div>
 
                 <div class="form-group">
                     <label>Enviar alerta geral:</label>
-                    <textarea rows="3" placeholder="Digite o alerta para a população..."></textarea>
+                    <textarea id="textoAlerta" rows="3" placeholder="Digite o alerta para a população..."></textarea>
                     <br><br>
-                    <button class="btn">Enviar Alerta</button>
+                    <button class="btn" onclick="enviarAlerta()">Enviar Alerta</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Dados dos bairros
+        const bairros = [
+            'Centro', 'Jardins', 'Vila Nova', 'Industrial', 'Residencial', 'Comercial',
+            'Zona Norte', 'Zona Sul', 'Vila Rica', 'Boa Vista', 'Liberdade', 'Saúde',
+            'Lapa', 'Pinheiros', 'Vila Madalena', 'Santana', 'Tatuapé', 'Penha',
+            'Ipiranga', 'Morumbi', 'Bela Vista', 'Tucuruvi', 'Campo Limpo', 'Jaçanã'
+        ];
+
+        // Inicializar LocalStorage se vazio
+        function inicializarDados() {
+            if (!localStorage.getItem('ocorrencias')) {
+                localStorage.setItem('ocorrencias', JSON.stringify([]));
+            }
+            if (!localStorage.getItem('statusBairros')) {
+                const statusInicial = {};
+                bairros.forEach(b => statusInicial[b] = 'normal');
+                // Alguns alagamentos iniciais para demonstração
+                statusInicial['Industrial'] = 'alagado-medio';
+                statusInicial['Zona Sul'] = 'alagado-severo';
+                statusInicial['Liberdade'] = 'alagado-leve';
+                statusInicial['Santana'] = 'alagado-medio';
+                statusInicial['Bela Vista'] = 'bloqueado';
+                localStorage.setItem('statusBairros', JSON.stringify(statusInicial));
+            }
+        }
+
+        // Carregar mapa
+        function carregarMapa() {
+            const grid = document.getElementById('mapaGrid');
+            const status = JSON.parse(localStorage.getItem('statusBairros'));
+            grid.innerHTML = '';
+            
+            bairros.forEach(bairro => {
+                const div = document.createElement('div');
+                div.className = `map-area ${status[bairro]}`;
+                div.textContent = bairro;
+                grid.appendChild(div);
+            });
+        }
+
+        // Mostrar tela
         function mostrarTela(tela) {
-            // Esconder todas as telas
-            var telas = document.querySelectorAll('.screen');
-            telas.forEach(function(t) {
-                t.classList.remove('active');
-            });
+            document.querySelectorAll('.screen').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             
-            // Remover classe active dos botões
-            var botoes = document.querySelectorAll('.nav-item');
-            botoes.forEach(function(b) {
-                b.classList.remove('active');
-            });
-            
-            // Mostrar tela selecionada
             document.getElementById(tela).classList.add('active');
-            
-            // Ativar botão
             event.target.classList.add('active');
+            
+            if (tela === 'historico') carregarHistorico();
+            if (tela === 'defesa-civil') carregarDefesaCivil();
+            if (tela === 'mapa') carregarMapa();
         }
         
-        function enviarOcorrencia() {
+        // Enviar ocorrência
+        function enviarOcorrencia(event) {
+            event.preventDefault();
+            
+            const ocorrencia = {
+                id: Date.now(),
+                localizacao: document.getElementById('localizacao').value,
+                tipo: document.getElementById('tipoAlagamento').value,
+                descricao: document.getElementById('descricao').value,
+                data: new Date().toLocaleString('pt-BR'),
+                status: 'Ativo'
+            };
+            
+            const ocorrencias = JSON.parse(localStorage.getItem('ocorrencias'));
+            ocorrencias.unshift(ocorrencia);
+            localStorage.setItem('ocorrencias', JSON.stringify(ocorrencias));
+            
             document.getElementById('sucesso').style.display = 'block';
-            setTimeout(function() {
+            document.getElementById('formRegistro').reset();
+            
+            setTimeout(() => {
                 document.getElementById('sucesso').style.display = 'none';
             }, 3000);
+            
+            return false;
         }
         
+        // Calcular rota
         function calcularRota() {
-            document.getElementById('rotaResultado').style.display = 'block';
+            const origem = document.getElementById('origem').value;
+            const destino = document.getElementById('destino').value;
+            
+            if (origem && destino) {
+                document.getElementById('rotaResultado').style.display = 'block';
+            }
         }
+
+        // Carregar histórico
+        function carregarHistorico() {
+            const ocorrencias = JSON.parse(localStorage.getItem('ocorrencias'));
+            const lista = document.getElementById('listaHistorico');
+            
+            lista.innerHTML = '';
+            
+            if (ocorrencias.length === 0) {
+                lista.innerHTML = '<p>Nenhuma ocorrência registrada ainda.</p>';
+            } else {
+                ocorrencias.forEach(oc => {
+                    const classe = oc.tipo === 'severo' || oc.tipo === 'bloqueado' ? 'alto' : 
+                                   oc.tipo === 'medio' ? 'medio' : '';
+                    
+                    const div = document.createElement('div');
+                    div.className = `historico-item ${classe}`;
+                    div.innerHTML = `
+                        <div class="data">${oc.data}</div>
+                        <strong>${oc.localizacao}</strong>
+                        <p>${oc.descricao || 'Sem descrição adicional'}</p>
+                        <small>Tipo: ${oc.tipo} • Status: ${oc.status}</small>
+                    `;
+                    lista.appendChild(div);
+                });
+            }
+            
+            document.getElementById('totalOcorrencias').textContent = ocorrencias.length;
+        }
+
+        // Filtrar histórico
+        function filtrarHistorico() {
+            const filtro = document.getElementById('filtroBairro').value;
+            const ocorrencias = JSON.parse(localStorage.getItem('ocorrencias'));
+            const lista = document.getElementById('listaHistorico');
+            
+            lista.innerHTML = '';
+            
+            const filtradas = filtro ? 
+                ocorrencias.filter(oc => oc.localizacao.toLowerCase().includes(filtro)) : 
+                ocorrencias;
+            
+            if (filtradas.length === 0) {
+                lista.innerHTML = '<p>Nenhuma ocorrência encontrada.</p>';
+            } else {
+                filtradas.forEach(oc => {
+                    const classe = oc.tipo === 'severo' || oc.tipo === 'bloqueado' ? 'alto' : 
+                                   oc.tipo === 'medio' ? 'medio' : '';
+                    
+                    const div = document.createElement('div');
+                    div.className = `historico-item ${classe}`;
+                    div.innerHTML = `
+                        <div class="data">${oc.data}</div>
+                        <strong>${oc.localizacao}</strong>
+                        <p>${oc.descricao || 'Sem descrição adicional'}</p>
+                        <small>Tipo: ${oc.tipo} • Status: ${oc.status}</small>
+                    `;
+                    lista.appendChild(div);
+                });
+            }
+        }
+
+        // Carregar painel Defesa Civil
+        function carregarDefesaCivil() {
+            const ocorrencias = JSON.parse(localStorage.getItem('ocorrencias'));
+            const ativas = ocorrencias.filter(oc => oc.status === 'Ativo');
+            
+            document.getElementById('ocorrenciasAtivas').textContent = ativas.length;
+            document.getElementById('alertasHoje').textContent = ativas.length;
+            
+            const container = document.getElementById('ocorrenciasPrioritarias');
+            container.innerHTML = '';
+            
+            if (ativas.length === 0) {
+                container.innerHTML = '<p>Nenhuma ocorrência ativa no momento.</p>';
+            } else {
+                ativas.slice(0, 3).forEach(oc => {
+                    const bg = oc.tipo === 'severo' || oc.tipo === 'bloqueado' ? '#f8d7da' : '#fff3cd';
+                    const div = document.createElement('div');
+                    div.className = 'emergencia';
+                    div.style.backgroundColor = bg;
+                    div.innerHTML = `
+                        <div class="data">ATIVO - ${oc.data}</div>
+                        <strong>${oc.localizacao}</strong>
+                        <p>${oc.descricao || 'Alagamento reportado'}</p>
+                        <div class="botoes">
+                            <button class="btn btn-pequeno btn-vermelho" onclick="resolverOcorrencia(${oc.id})">Resolver</button>
+                            <button class="btn btn-pequeno btn-amarelo">Atualizar</button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+        }
+
+        // Resolver ocorrência
+        function resolverOcorrencia(id) {
+            const ocorrencias = JSON.parse(localStorage.getItem('ocorrencias'));
+            const index = ocorrencias.findIndex(oc => oc.id === id);
+            if (index !== -1) {
+                ocorrencias[index].status = 'Resolvido';
+                localStorage.setItem('ocorrencias', JSON.stringify(ocorrencias));
+                carregarDefesaCivil();
+            }
+        }
+
+        // Enviar alerta
+        function enviarAlerta() {
+            const texto = document.getElementById('textoAlerta').value;
+            if (texto) {
+                alert('Alerta enviado para a população:\n\n' + texto);
+                document.getElementById('textoAlerta').value = '';
+            }
+        }
+
+        // Inicializar ao carregar página
+        window.onload = function() {
+            inicializarDados();
+            carregarMapa();
+        };
     </script>
 </body>
 </html>
