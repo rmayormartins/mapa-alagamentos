@@ -281,6 +281,38 @@
             color: #333;
         }
 
+        /* Notificação */
+        .notificacao {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .map-area.destacado {
+            box-shadow: 0 0 0 3px #2c5aa0;
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
         @media (max-width: 768px) {
             .nav {
                 flex-direction: column;
@@ -305,6 +337,9 @@
 </head>
 <body>
     <div class="container">
+        <!-- Notificação -->
+        <div class="notificacao" id="notificacao"></div>
+        
         <div class="header">
             <h1>Mapa de Alagamentos na Cidade</h1>
             <p>Sistema colaborativo para monitoramento de enchentes</p>
@@ -325,7 +360,7 @@
                 
                 <div class="map-container">
                     <div class="map-grid" id="mapaGrid">
-                        <!-- Grid será gerado dinamicamente -->
+                        <!-- Grid gerado dinamicamente -->
                     </div>
                 </div>
 
@@ -354,7 +389,13 @@
 
                 <div class="form-group">
                     <label>Buscar localização:</label>
-                    <input type="text" id="buscaLocal" placeholder="Digite o nome da rua ou bairro...">
+                    <input type="text" id="buscaLocal" placeholder="Digite o nome da rua ou bairro..." onkeyup="buscarBairro()">
+                    <small id="resultadoBusca" style="color: #2c5aa0; font-weight: bold;"></small>
+                </div>
+                
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn" onclick="exportarRelatorio()" style="background-color: #28a745;"> Exportar Relatório</button>
+                    <button class="btn" onclick="limparDados()" style="background-color: #dc3545; margin-left: 10px;"> Limpar Dados</button>
                 </div>
             </div>
 
@@ -373,7 +414,7 @@
                         <label>Tipo de alagamento:</label>
                         <select id="tipoAlagamento" required>
                             <option value="">Selecione...</option>
-                            <option value="leve">Leve - Água até a sarjeta</option>
+                            <option value="leve">Leve - Água até o meio fio</option>
                             <option value="medio">Médio - Água na metade da rua</option>
                             <option value="severo">Severo - Água cobrindo a rua</option>
                             <option value="bloqueado">Bloqueado - Intransitável</option>
@@ -436,6 +477,10 @@
                     </select>
                 </div>
 
+                <div style="margin-bottom: 20px;">
+                    <button class="btn" onclick="exportarRelatorio()" style="background-color: #28a745;"> Exportar Relatório</button>
+                </div>
+
                 <div id="listaHistorico">
                     <!-- Histórico será carregado dinamicamente -->
                 </div>
@@ -482,7 +527,7 @@
                 <h3>Ocorrências Prioritárias</h3>
                 
                 <div id="ocorrenciasPrioritarias">
-                    <!-- Ocorrências serão carregadas dinamicamente -->
+                    <!-- Ocorrências carregadas dinamicamente -->
                 </div>
 
                 <div class="form-group">
@@ -565,6 +610,9 @@
             const ocorrencias = JSON.parse(localStorage.getItem('ocorrencias'));
             ocorrencias.unshift(ocorrencia);
             localStorage.setItem('ocorrencias', JSON.stringify(ocorrencias));
+            
+            // Mostrar notificação
+            mostrarNotificacao(' Ocorrência registrada com sucesso!');
             
             document.getElementById('sucesso').style.display = 'block';
             document.getElementById('formRegistro').reset();
@@ -695,8 +743,112 @@
         function enviarAlerta() {
             const texto = document.getElementById('textoAlerta').value;
             if (texto) {
-                alert('Alerta enviado para a população:\n\n' + texto);
+                mostrarNotificacao(' Alerta enviado para a população!');
                 document.getElementById('textoAlerta').value = '';
+            }
+        }
+
+        // Buscar bairro no mapa
+        function buscarBairro() {
+            const busca = document.getElementById('buscaLocal').value.toLowerCase();
+            const areas = document.querySelectorAll('.map-area');
+            const resultado = document.getElementById('resultadoBusca');
+            
+            // Remove destaque anterior
+            areas.forEach(a => a.classList.remove('destacado'));
+            
+            if (busca.length < 3) {
+                resultado.textContent = '';
+                return;
+            }
+            
+            let encontrado = false;
+            areas.forEach(area => {
+                if (area.textContent.toLowerCase().includes(busca)) {
+                    area.classList.add('destacado');
+                    encontrado = true;
+                    
+                    // Mostra status
+                    const status = area.className.includes('severo') ? 'Alagamento Severo' :
+                                   area.className.includes('medio') ? 'Alagamento Médio' :
+                                   area.className.includes('leve') ? 'Alagamento Leve' :
+                                   area.className.includes('bloqueado') ? 'Bloqueado' : 'Normal';
+                    
+                    resultado.textContent = `${area.textContent}: ${status}`;
+                }
+            });
+            
+            if (!encontrado) {
+                resultado.textContent = 'Bairro não encontrado';
+            }
+        }
+
+        // Mostrar notificação
+        function mostrarNotificacao(mensagem) {
+            const notif = document.getElementById('notificacao');
+            notif.textContent = mensagem;
+            notif.style.display = 'block';
+            
+            setTimeout(() => {
+                notif.style.display = 'none';
+            }, 3000);
+        }
+
+        // Exportar relatório
+        function exportarRelatorio() {
+            const ocorrencias = JSON.parse(localStorage.getItem('ocorrencias'));
+            
+            if (ocorrencias.length === 0) {
+                alert('Nenhuma ocorrência para exportar!');
+                return;
+            }
+            
+            // Criar conteúdo do relatório
+            let conteudo = 'RELATÓRIO DE ALAGAMENTOS\n';
+            conteudo += 'Sistema Colaborativo de Monitoramento de Enchentes\n';
+            conteudo += '='.repeat(60) + '\n\n';
+            conteudo += `Data da Exportação: ${new Date().toLocaleString('pt-BR')}\n`;
+            conteudo += `Total de Ocorrências: ${ocorrencias.length}\n\n`;
+            conteudo += '='.repeat(60) + '\n\n';
+            
+            ocorrencias.forEach((oc, index) => {
+                conteudo += `OCORRÊNCIA #${index + 1}\n`;
+                conteudo += `-`.repeat(40) + '\n';
+                conteudo += `Data: ${oc.data}\n`;
+                conteudo += `Localização: ${oc.localizacao}\n`;
+                conteudo += `Tipo: ${oc.tipo}\n`;
+                conteudo += `Status: ${oc.status}\n`;
+                conteudo += `Descrição: ${oc.descricao || 'Não informada'}\n\n`;
+            });
+            
+            // Criar arquivo para download
+            const blob = new Blob([conteudo], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio-alagamentos-${Date.now()}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            mostrarNotificacao('Relatório exportado com sucesso!');
+        }
+
+        // Limpar dados (para demonstração)
+        function limparDados() {
+            if (confirm(' Tem certeza que deseja limpar todos os dados?\n\nEsta ação não pode ser desfeita!')) {
+                localStorage.removeItem('ocorrencias');
+                localStorage.removeItem('statusBairros');
+                inicializarDados();
+                carregarMapa();
+                mostrarNotificacao(' Dados limpos! Sistema reiniciado.');
+                
+                // Atualiza telas
+                if (document.getElementById('historico').classList.contains('active')) {
+                    carregarHistorico();
+                }
+                if (document.getElementById('defesa-civil').classList.contains('active')) {
+                    carregarDefesaCivil();
+                }
             }
         }
 
